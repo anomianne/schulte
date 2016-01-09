@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<!--
+
+По кнопке:
+Сгенерировать табличку
+  массив 1..25
+  перемешать (shuffle)
+  расставить в табличку
+Сохранить время
+
+По клику на число:
+Проверить верность
+Дописать время и значение в список-результат
+
+[[1, time1], [2, time2], [4, time3], [5, time4]. ...]
+
+== [1, 2, 4, 5, 6, 7, 8, 9, 1, 11]
+   [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+v0 [1, 2, 4, 5, 6, 7, 8, 9, 1, 11]
+v1 [1, 2, NaN, 4, 5, 6, 7, 8, 9, 1, 11]
+
+***
+v0 [1, 2,   5,   6, 8, 9,  10, 1, 11]
+v2 [1, 2, NaN, NaN, 5, 6,   8, 9,  1, 11]
+v3 [1, 2, NaN, NaN, 5, 6, NaN, 8,  9,  1, 11]
+   [1, 2,   3,   4, 5, 6,   7, 8,  9, 10]
+***
+
+v0 [1, 2, 11, 3, 4, 5, 6, 7, 8, 9, 10, 1, 11]
+v1 [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 11]
+   [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+-->
+<html>
+<head>
+	<meta charset="UTF-8">
+
+<script>
+var past_time;
+var click_log;	
+function start_stuff() {
+    // document.getElementById("demo").innerHTML = '<table border="1"><tr><td>1.1</td><td>1.2</td><td></td></tr><tr><td>2.1</td><td>2.2</td><td>2.3</td></tr></table>';
+    tableCreate();
+    click_log = [];
+    past_time = new Date();
+}
+
+function onerange(n){
+	/* make array with numbers from 1 to n inclusively */
+	var arr = [];
+	for (i=1; i<=n; i++){
+		arr.push(i);
+	}
+	return arr;
+}
+
+function shuffle(o){
+    for(var j, x, i = o.length; i; j = Math.floor(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
+    return o;
+}
+
+function wrap_click_handler(tag_name, handler){
+	/* Создаёт функцию-обработчик клика которая находит родительский
+	   элемент с тэгом tag_name и вызывает handler(element) */
+	var click_handler = function(event) {
+	  var target = event.target;
+
+	  // цикл двигается вверх от target к родителям до table
+	  while (target != this) {
+		if (target.tagName == tag_name) {
+		  // нашли элемент, который нас интересует!
+		  handler(target, event);
+		  return;
+		}
+		target = target.parentNode;
+	  }
+	  // возможна ситуация, когда клик был вне <td>
+	  // если цикл дошёл до table и ничего не нашёл,
+	  // то обработчик просто заканчивает работу
+	}
+	return click_handler;
+}
+
+function td_click_handler(element, event){
+	console.log(element._value);
+	var Now = new Date(); 
+	// console.log('Past', past_time);
+	// console.log('Now', Now);
+	var diff = (Now.getTime() - past_time.getTime()) / 1000;
+
+	// console.log('Diff', diff);
+	
+	click_log.push({num: element._value, diff: diff});
+	console.log(JSON.stringify(click_log));
+	past_time = Now;
+}
+
+function tableCreate() {
+	var arr = shuffle(onerange(25));
+	console.log(arr);
+
+    var table_holder = document.getElementById('table_holder');
+    var tbl = document.createElement('table');
+    // tbl.style.width = '100%';
+    tbl.setAttribute('border', '1');
+    var tbdy = document.createElement('tbody');
+
+	var vpos = 0;
+    for (var i = 0; i < 5; i++) {
+        var tr = document.createElement('tr');
+        tr.style.height = '5em';
+        for (var j = 0; j < 5; j++) {
+			var td = document.createElement('td');
+			td.appendChild(document.createTextNode(arr[vpos]));
+			td._value = arr[vpos];
+			vpos = vpos + 1;
+			tr.appendChild(td)
+        }
+        tbdy.appendChild(tr);
+    }
+    tbl.appendChild(tbdy);
+    tbl.onclick = wrap_click_handler("TD", td_click_handler);
+    table_holder.appendChild(tbl);
+}
+</script>
+</head>
+<body>
+
+<h1>Таблицы Шульте</h1>
+
+<p id="demo" onclick="myFunction()">A Paragraph.</p>
+
+<div id="table_holder" align="center">
+
+</div>
+
+<button type="button" onclick="start_stuff()">Try it</button>
+
+</body>
+</html> 
